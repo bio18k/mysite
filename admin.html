@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Challenge Gym Admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="loginScreen" class="login-container">
+    <div class="login-box">
+      <h2>🔐 Вход в админ-панель</h2>
+      <p>Challenge Gym</p>
+      <input type="password" id="passwordInput" placeholder="Введите пароль" class="login-input">
+      <select id="userSelect" class="login-input">
+        <option value="admin">Администратор</option>
+        <option value="manager">Менеджер</option>
+      </select>
+      <button onclick="checkPassword()" class="login-btn">Войти</button>
+      <div id="loginError" class="login-error"></div>
+    </div>
+  </div>
+
+  <div id="adminContent" style="display: none;">
+    <h1>Challenge Gym - Admin Panel</h1>
+    
+    <!-- Шапка с пользователем -->
+    <div class="user-header">
+      <span id="currentUser"></span>
+      <button onclick="logout()" class="logout-btn">Выйти</button>
+    </div>
+
+    <!-- СЧЕТЧИКИ -->
+    <div class="counters">
+      <div class="counter-card">
+        <h3>Клиентов</h3>
+        <span id="clientCount">0</span>
+      </div>
+      <div class="counter-card">
+        <h3>Тренеров</h3>
+        <span id="trainerCount">0</span>
+      </div>
+      <div class="counter-card">
+        <h3>Тренировок</h3>
+        <span id="sessionCount">0</span>
+      </div>
+    </div>
+
+    <!-- СТАТИСТИКА (НОВАЯ) -->
+    <div class="stats-container">
+      <h2>📊 Статистика</h2>
+      <div class="stats-grid">
+        <div class="stats-card income">
+          <h4 style="color: rgb(255, 255, 255);">💰 Доход сегодня</h4>
+          <span id="todayIncome"  style="color: rgb(255, 255, 255);">0</span>
+          <small>сум</small>
+        </div>
+        <div class="stats-card sessions">
+          <h4 style="color: rgb(255, 255, 255);">📅 Тренировок сегодня</h4>
+          <span id="todaySessions" style="color: rgb(255, 255, 255);">0</span>
+        </div>
+        <div class="stats-card week-income">
+          <h4 style="color: black;">📈 Доход за неделю</h4>
+          <span id="weekIncome" style="color: black;">0</span>
+          <small style="color: black;">сум</small>
+        </div>
+        <div class="stats-card month-income">
+          <h4 style="color: black;">📊 Доход за месяц</h4>
+          <span id="monthIncome" style="color: black;">0</span>
+          <small style="color: black;">сум</small>
+        </div>
+        <div class="stats-card debtors">
+          <h4 style="color: black;">⚠️ Должников</h4>
+          <span id="debtorsCount" style="color: black;">0</span>
+        </div>
+        <div class="stats-card popular">
+          <h4 style="color: black;">⭐ Популярный тренер</h4>
+          <span id="popularTrainer" style="color: black;">-</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- КНОПКА ОЧИСТКИ (только для админа) -->
+    <div id="adminOnlySection" style="text-align: right; margin-bottom: 20px; display: none;">
+      <button onclick="clearAllData()" style="background-color: #e74c3c;" class="danger-btn">Очистить всё</button>
+    </div>
+
+    <section>
+      <h2>Добавить клиента</h2>
+      <input type="text" id="clientName" placeholder="Имя клиента">
+      <input type="tel" id="clientPhone" placeholder="Телефон">
+      <textarea id="clientGoals" placeholder="Цели и заметки (похудеть, набрать массу, противопоказания...)" rows="3"></textarea>
+      <button onclick="addClient()">Добавить клиента</button>
+    </section>
+
+    <section>
+      <h2>Добавить тренера</h2>
+      <input type="text" id="trainerName" placeholder="Имя тренера">
+      <select id="trainerSport">
+        <option value="boxing">Бокс</option>
+        <option value="mma">ММА</option>
+        <option value="gym">Качалка</option>
+      </select>
+      <button onclick="addTrainer()">Добавить тренера</button>
+    </section>
+
+    <section>
+      <h2>Записать клиента на тренировку</h2>
+      <select id="selectClient"></select>
+      <select id="selectTrainer"></select>
+      <input type="datetime-local" id="sessionTime" placeholder="Время тренировки">
+      
+      <div class="price-info" id="priceDisplay">
+        Стоимость: <span>0 сум</span>
+      </div>
+      
+      <label class="checkbox-label">
+        <input type="checkbox" id="sessionPaid"> Оплачено
+      </label>
+      
+      <button onclick="addSession()">Записать</button>
+    </section>
+
+    <section>
+      <h2>Фильтры</h2>
+      <select id="filterTrainer">
+        <option value="">Все тренеры</option>
+      </select>
+      <select id="filterPaid">
+        <option value="all">Все тренировки</option>
+        <option value="paid">Оплаченные</option>
+        <option value="unpaid">Неоплаченные</option>
+      </select>
+      <button onclick="applyFilters()">Применить фильтр</button>
+      <button onclick="resetFilters()">Сбросить</button>
+    </section>
+
+    <section>
+      <h2>Список клиентов</h2>
+      <ul id="clientList"></ul>
+
+      <h2>Список тренеров</h2>
+      <ul id="trainerList"></ul>
+
+      <h2>Записи на тренировки</h2>
+      <ul id="sessionList"></ul>
+    </section>
+  </div>
+
+  <!-- МОДАЛЬНОЕ ОКНО ПРОФИЛЯ КЛИЕНТА -->
+  <div id="clientProfileModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="profileClientName">Профиль клиента</h2>
+        <span class="close-modal" onclick="closeClientProfile()">&times;</span>
+      </div>
+      <div class="modal-body" id="profileContent">
+        <!-- Контент будет заполняться динамически -->
+      </div>
+    </div>
+  </div>
+  <!-- Добавьте после блока добавления тренера или в любое место -->
+
+<!-- ВЫПЛАТА ЗАРПЛАТЫ ТРЕНЕРАМ (НОВЫЙ БЛОК) -->
+<section class="salary-section">
+  <h2>💰 Выплата зарплаты тренеру</h2>
+  
+  <div class="salary-container">
+    <div class="salary-form">
+      <select id="salaryTrainerSelect">
+        <option value="">Выберите тренера</option>
+      </select>
+      
+      <input type="number" id="salaryAmount" placeholder="Сумма" min="0" step="1000">
+      
+      <input type="date" id="salaryDate" value="">
+      
+      <textarea id="salaryComment" placeholder="Комментарий (например: Зарплата за февраль)" rows="2"></textarea>
+      
+      <div class="salary-buttons">
+        <button onclick="addSalaryPayment()" class="salary-btn">💸 Выплатить зарплату</button>
+      </div>
+    </div>
+    
+    <!-- ИСТОРИЯ ВЫПЛАТ -->
+    <div class="salary-history">
+      <h3>📜 История выплат</h3>
+      <div id="salaryHistoryList">
+        <!-- Сюда будут добавляться выплаты -->
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- СТАТИСТИКА ПО ТРЕНЕРАМ -->
+<section class="trainer-stats">
+  <h2>📊 Статистика тренеров</h2>
+  <div id="trainerFinanceStats" class="trainer-stats-grid">
+    <!-- Статистика по каждому тренеру -->
+  </div>
+</section>
+
+  <script src="script.js"></script>
+</body>
+</html>
